@@ -1,5 +1,6 @@
 import noise
 import numpy as np
+import random
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
 
@@ -27,11 +28,22 @@ class generate_features():
         self.tasks_human = 0
         self.probabilities = np.zeros(self.shape)
 
-        self.frac_loss
+        #For loss of energy associated with the environment features
+        self.frac_loss = self.loss_E()
+
         self.temp_dis = self.feature_temp()
         self.elev_dis = self.feature_elevation()
         self.human_dis = self.feature_human_probab()
-        
+
+    def loss_E(self):
+        loss = []
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
+                tem = random.uniform(0.001,0.2)
+                elev = random.uniform(0.001,0.2)
+                loss.append([tem,elev])
+        return loss
+
     def createNodes(self):
         Nodes = []
         for i in range(self.shape[0]):
