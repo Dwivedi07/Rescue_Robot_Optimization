@@ -43,12 +43,17 @@ class ProblemFeatures():
         a=[]
         N = self.N_RR-self.T_RR
         for i in range(self.T_RR):
-            if N!=0:
+            if i==self.T_RR-1:
+                gen = N
+                a.append(gen+1)
+            elif N!=0:
                 gen = random.randint(0,N)
+                a.append(1+gen)
                 N= N-gen
             else:
                 gen = 0
-            a.append(1+gen)
+                a.append(1+gen)
+        
         return a
 
     def Initialize_energy(self):
@@ -57,6 +62,7 @@ class ProblemFeatures():
             energy = random.uniform(175,250)
             for j in range(self.Robot_set[i]):
                 En.append(energy)
+        print('The size initialized inside the decay constants',len(En))
         return En
                 
     def Initialize_decayrate(self):
