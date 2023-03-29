@@ -1,1 +1,1 @@
-This folder will contain resources
+This folder will contain papers that we are referring to
