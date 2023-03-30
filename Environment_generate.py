@@ -12,7 +12,7 @@ class generate_features():
         self.scale_temp = 100.0
         self.octaves_temp = 6
         self.persistence_temp = 0.75
-        self.lacunarity_temp = 2.0
+        self.lacunarity_temp = 2
         self.node_set = self.createNodes()
 
         #Elevation feature variables
@@ -28,19 +28,25 @@ class generate_features():
         self.tasks_human = 0
         self.probabilities = np.zeros(self.shape)
 
-        #For loss of energy associated with the environment features
-        self.frac_loss = self.loss_E()
-
         self.temp_dis = self.feature_temp()
         self.elev_dis = self.feature_elevation()
         self.human_dis = self.feature_human_probab()
 
+        #For loss of energy associated with the environment features
+        self.frac_loss = self.loss_E()
+
     def loss_E(self):
-        loss = []
+        loss = []                              #right now losses considered only due to elevation and temperature
         for i in range(self.shape[0]):
             for j in range(self.shape[1]):
-                tem = random.uniform(0.001,0.2)
-                elev = random.uniform(0.001,0.2)
+                if self.node_set[i*self.shape[0] + j].temp >= 340:
+                    tem = random.uniform(0.15,0.2)
+                else:
+                    tem = random.uniform(0.001,0.15)
+                if self.node_set[i*self.shape[0] + j].elev >= 6:   
+                    elev = random.uniform(0.15,0.2)
+                else:
+                    elev = random.uniform(0.001,0.15)
                 loss.append([tem,elev])
         return loss
 
@@ -70,7 +76,7 @@ class generate_features():
                                             lacunarity=self.lacunarity_temp, 
                                             repeatx=1024, 
                                             repeaty=1024, 
-                                            base=42)
+                                            base=42)*50 + 350        #Range of temperature 300K to 400K
                 self.node_set[i*self.shape[0] + j].temp = temp[i][j]
         
         plt.imshow(temp,cmap='inferno')
@@ -87,7 +93,7 @@ class generate_features():
                                             lacunarity=self.lacunarity_elev, 
                                             repeatx=1024, 
                                             repeaty=1024, 
-                                            base=42)
+                                            base=42)*7+7                 #Mumbai 14 m above sea level
                 self.node_set[i*self.shape[0] + j].elev = elev[i][j]
         
         plt.imshow(elev,cmap='terrain')
@@ -100,6 +106,10 @@ class generate_features():
                 p = np.random.beta(self.alpha,self.beta)
                 self.probabilities[i][j]=p
                 human_pres[i][j] = np.random.binomial(1, p, size=None)
+                '''
+                Later DO change the code here to consider the case when the number of humans trapped is less than the number of 
+                available robots to plan rescue for the simplest case m<n
+                '''
                 if human_pres[i][j]==1:
                     self.tasks_human+=1
                 self.node_set[i*self.shape[0] + j].human_pres = human_pres[i][j]

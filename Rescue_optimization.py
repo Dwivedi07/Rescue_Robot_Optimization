@@ -14,7 +14,7 @@ class ProblemFeatures():
         self.T_RR = args.typerr
         self.N_SR = args.sensorrobots
         self.T_SR = args.typesr
-        self.Task_types = 1            #default saving humans
+        self.Task_types = 1            #default rescue humans trapped
 
 
         self.node= Data.node_set       #Data generated from the environment sample planning
@@ -32,8 +32,11 @@ class ProblemFeatures():
 
     def task_nodes(self):
         indexes = []
+        '''
+        Simplifying the model:Humans rescue is the only task to execute
+        '''
         for i in range(len(self.node)):
-            if self.node[i].human_pres == 1:
+            if self.node[i].human_pres == 1:     
                 x = i//self.Data.shape[0]
                 y = i%self.Data.shape[0]
                 indexes.append([x,y])
@@ -43,12 +46,17 @@ class ProblemFeatures():
         a=[]
         N = self.N_RR-self.T_RR
         for i in range(self.T_RR):
-            if N!=0:
+            if i==self.T_RR-1:
+                gen = N
+                a.append(gen+1)
+            elif N!=0:
                 gen = random.randint(0,N)
+                a.append(1+gen)
                 N= N-gen
             else:
                 gen = 0
-            a.append(1+gen)
+                a.append(1+gen)
+        
         return a
 
     def Initialize_energy(self):
@@ -57,6 +65,12 @@ class ProblemFeatures():
             energy = random.uniform(175,250)
             for j in range(self.Robot_set[i]):
                 En.append(energy)
+
+        '''Testing::
+        I have made first n(equal to number of tasks to do) robots to have max energy so ideally our answer should be those only
+        '''
+        # for i in range(len(self.target_coordinates)):
+        #     En[i] = 250
         return En
                 
     def Initialize_decayrate(self):
@@ -65,6 +79,12 @@ class ProblemFeatures():
             rate = random.uniform(0.6,2.6)
             for j in range(self.Robot_set[i]):
                 lam.append(rate) 
+
+        '''Testing::
+        I have made first n(equal to number of tasks to do) robots to have 0 decay rate so ideally our answer should be those only
+        '''
+        # for i in range(len(self.target_coordinates)):
+        #     lam[i] = 0
         return lam
 
     def get_path_points(self,xg,yg):
@@ -102,6 +122,9 @@ if __name__ == '__main__':
         EnvironmentData = generate_features()
         RobotData = ProblemFeatures(args,EnvironmentData)
         # EnvironmentPlanner = Sampling(EnvironmentData)
+
+        print('Number of Robots =',args.rescuerobots)
+        print('Number of Tasks  =',len(RobotData.target_coordinates))
         Solution = Solver(EnvironmentData,RobotData)
         
         

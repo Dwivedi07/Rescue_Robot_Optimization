@@ -40,7 +40,7 @@ class Solver():
             Ei = self.task_energy
             ni = len(self.path_TargetNode[i])
             for j in range(self.TN):
-                print(len(self.decay_rate),self.TN)
+                # print(len(self.decay_rate),self.TN,self.RN)
                 lamj = self.decay_rate[j]
                 Eoj = self.robot_energy[j]
                 coeff_loss = self.calc_loss_trans(i)
@@ -52,7 +52,7 @@ class Solver():
         problem += lpSum([tirj[(i, j)]*coeffij[i,j] for i in range(self.RN) for j in range(self.TN)])
 
         #Solve the problem
-        problem.solve()
+        problem.solve(PULP_CBC_CMD(msg=0))
 
         #Print the solution
         for i in range(self.RN):
