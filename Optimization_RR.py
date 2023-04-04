@@ -52,7 +52,7 @@ class Solver():
         problem += lpSum([tirj[(i, j)]*coeffij[i,j] for i in range(self.RN) for j in range(self.TN)])
 
         #Solve the problem
-        problem.solve(PULP_CBC_CMD(msg=0))
+        problem.solve(PULP_CBC_CMD(msg=1))
 
         #Print the solution
         for i in range(self.RN):
@@ -68,10 +68,7 @@ class Solver():
         coeff = 1
         if len(self.path_TargetNode[i]) != 0:
             for j in range(len(self.path_TargetNode[i])):
-                a=self.path_TargetNode[i][j][0]
-                b=self.path_TargetNode[i][j][1]
-                m=self.per_E[0][0]+self.per_E[0][1]
-                SumLoss = m
+                SumLoss=self.per_E[0][0]+self.per_E[0][1]
                 coeff = coeff*SumLoss
             return coeff
         else:

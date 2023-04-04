@@ -121,7 +121,7 @@ if __name__ == '__main__':
         print("="*18 + 'Task Fire Rescue' + "="*18)
         EnvironmentData = generate_features()
         RobotData = ProblemFeatures(args,EnvironmentData)
-        # EnvironmentPlanner = Sampling(EnvironmentData)
+        # EnvironmentPlanner = Sampling(EnvironmentData,args)
 
         print('Number of Robots =',args.rescuerobots)
         print('Number of Tasks  =',len(RobotData.target_coordinates))

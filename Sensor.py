@@ -6,21 +6,27 @@ from mpl_toolkits.mplot3d import axes3d
 from Environment_generate import generate_features
 
 class Sampling():
-    def __init__(self,Data):
-        self.shape = (50,50)
-        self.robots = 10
-        self.grid = np.zeros(self.shape)-1
-        self.epsilon = 0.1
-
+    def __init__(self):
+        self.shape = (100,100)
+        self.srobots = 20
+        self.typerr = 2
+        self.dis=[10,10]
+        self.radius = [5,10]
         self.gener_info = self.createAllNodes()
-        self.sci = 0.999
-        self.Enviro_data = Data
-        self.probabilities = self.Enviro_data.probabilities
-
-        #sampling data from sensors
-        self.sample_human()
-        self.sample_elev()
-        self.sample_temp()
+        self.num_parents = 4
+        self.number_of_random_samples = 10000
+        self.r = self.in_r()
+        self.sample_pos()
+        
+        
+    def in_r(self):
+        r = np.zeros(self.srobots)
+        for i in range(self.dis[0]):
+            r[i]= self.radius[0]
+        for j in range(self.dis[0], self.dis[0]+self.dis[1]):
+            r[j]= self.radius[1]
+        
+        return r
 
         
     class Node:
@@ -29,7 +35,8 @@ class Sampling():
             self.y = y  # index of grid
 
         def __repr__(self): 
-            return "Node x:% s y:% s sam_temp:% s sam_elev:% s sam_human_pres:% s" % (self.x, self.y, self.sam_temp, self.sam_elev, self.sam_human_pres)
+            return "Node x:% s y:% s" % (self.x, self.y)
+            # return "Node x:% s y:% s sam_temp:% s sam_elev:% s sam_human_pres:% s" % (self.x, self.y, self.sam_temp, self.sam_elev, self.sam_human_pres)
 
     def createAllNodes(self):
         Nodes = []
@@ -41,28 +48,87 @@ class Sampling():
     
     def initialize(self):
         pos = []
-        x_pos = random.sample(range(0, 49), self.robots)
-        y_pos = random.sample(range(0, 49), self.robots)
-        for i in range(self.robots):
+        x_pos = random.sample(range(0, self.shape[0]-1), self.srobots)
+        y_pos = random.sample(range(0, self.shape[0]-1), self.srobots)
+        for i in range(self.srobots):
+
             Sensor_placed = self.Node(x_pos[i],y_pos[i])
             pos.append(Sensor_placed) 
-        
         return pos
-    
-    def sample_human(self):
-        in_position = self.initialize()
-        for i in range(self.robots):
-            p = self.probabilities[in_position[i].x,in_position[i].y]*self.sci + (1-self.probabilities[in_position[i].x,in_position[i].y])*(1-self.sci)
-            self.grid[in_position[i].x][in_position[i].y] = np.random.binomial(1, p, size=None)
+
+    def sample_pos(self):
+        #Intitalizing four random parent population
+        pop_i = []
+        for i in range(self.num_parents):
+            pop_i.append(self.initialize())
         
-        plt.imshow(self.grid,cmap='terrain')
-        plt.show()
-    
-    def sample_elev(self):
-        pass
 
-    def sample_temp(self):
-        pass
+        CArea0 = [self.EA(pop_i[i]) for i in range(self.num_parents)]
+        while (np.amax(CArea0)<0.9*(self.shape[0]*self.shape[1])):
+            p1 = pop_i[np.argsort(CArea0)[-1]]
+            p2 = pop_i[np.argsort(CArea0)[-2]]
+            Cc = self.crossover(p1,p2)
+            Mp = self.Mutate(p1,p2)
 
-# if __name__ == '__main__':
-#     Features = Sampling()  
+            pop_i = [Mp[0], Mp[1], Cc[0], Cc[1]]
+            CArea0=[self.EA(pop_i[i]) for i in range(self.num_parents)]
+            print('Maximum Area',CArea0[np.argsort(CArea0)[-1]])
+        return pop_i[np.argsort(CArea0)[-1]]
+
+    def crossover(self,p1,p2):
+        n=len(p1)-1
+        # print('size of list',n)
+        a = int(np.random.uniform(1, n))
+        # a = random.sample(range(1,n), 1)
+        c1=[]
+        c2=[]
+        for i in range(len(p1)):
+            if (i < n+1-a):
+                c1.append(p1[i])
+                c2.append(p2[i])
+            else:
+                c1.append(p2[i])
+                c2.append(p1[i])
+        
+        return [c1, c2]
+
+    def Mutate(self,p1,p2):
+        numer_of_nodes_to_mutate = int(np.random.uniform(1, len(p1)))
+        # print('numer_of_nodes_to_mutate',numer_of_nodes_to_mutate)
+
+        indexes1 = random.sample(range(0, len(p1)-1), numer_of_nodes_to_mutate)
+        # print(indexes1)
+        for j in indexes1:
+            p1[j].x = int(np.random.uniform(0, len(p1)-1))  #random.sample(range(0, len(p1)-1))
+            p1[j].y = int(np.random.uniform(0, len(p1)-1)) 
+
+        indexes2 = random.sample(range(0, len(p1)-1), numer_of_nodes_to_mutate)
+        for j in indexes2:
+            p2[j].x = int(np.random.uniform(0, len(p2)-1))
+            p2[j].y = int(np.random.uniform(0, len(p2)-1))
+
+        return [p1,p2]
+
+    def EA(self,pos):
+        area = self.shape[0]*self.shape[1]
+        count = 0 
+        for i in range(0, self.number_of_random_samples):
+            x = np.random.uniform(0, self.shape[0])
+            y = np.random.uniform(0, self.shape[1])
+            temp_cover = self.is_point_under_coverage(pos,x,y)
+            if (temp_cover): 
+                count = count + 1
+        estimated_area = area*count/self.number_of_random_samples
+        # print("The estimated area is:", estimated_area)
+        return estimated_area
+
+    def is_point_under_coverage(self,pos,x,y):
+        yes_it_is = False
+        for i in range(0, self.srobots): 
+            if np.sqrt((x - pos[i].x)**2 + (y - pos[i].y)**2) <= self.r[i]:
+                yes_it_is = True
+                break
+        return yes_it_is
+
+if __name__ == '__main__':
+    Features = Sampling()  
