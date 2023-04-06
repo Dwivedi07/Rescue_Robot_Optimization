@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 
 shape_ = (100, 100)
 total_num_sensors_ = 40
-r1_num_sensors_ = 30
-r2_num_sensors_ = 10
-radius_1_ = 10
+r1_num_sensors_ = 5
+r2_num_sensors_ = 35
+radius_1_ = 20
 radius_2_ = 5
 sensor_array_ = np.zeros((total_num_sensors_, 3))
 
@@ -16,8 +16,9 @@ def initialize_radii():
     global radius_1_, radius_2_
     for i in range(r1_num_sensors_):
         sensor_array_[i][0] = radius_1_
-    for j in range(r1_num_sensors_, r2_num_sensors_):
-        sensor_array_[i][0] = radius_2_
+    for j in range(r1_num_sensors_, total_num_sensors_):
+        sensor_array_[j][0] = radius_2_
+    print(sensor_array_)
 
 def initialize_locations():
     global total_num_sensors_, sensor_array_, shape_
@@ -38,6 +39,7 @@ def monte_carlo(number_of_random_samples):
     global shape_
     area = shape_[0]*shape_[1]
     count = 0 
+    start_time = time.time()
     for i in range(0, number_of_random_samples):
         x = np.random.uniform(0, shape_[0])
         y = np.random.uniform(0, shape_[1])
@@ -45,25 +47,27 @@ def monte_carlo(number_of_random_samples):
         if (temp_cover): 
             count = count + 1
     estimated_area = area*count/number_of_random_samples
-    print("The estimated area is:", estimated_area)
+    end_time = time.time()
+    print("The estimated area is:", estimated_area, "using", number_of_random_samples, "samples. The execution time is: ", end_time - start_time)
     return estimated_area
 
 if __name__ == "__main__":
-    start_time = time.time()
+    
     initialize_locations()
     initialize_radii()
     monte_carlo(10000)
-    end_time = time.time()
-    print("Time taken to execute is:", end_time - start_time)
+
+    
+
     #print("The radii of sensors are", sensor_array_[:] )
     circles_sensors_ = [0]*total_num_sensors_
     fig, ax = plt.subplots()
 
-    for i in range(0, r1_num_sensors_):
-        circles_sensors_[i] = plt.Circle((sensor_array_[i][1], sensor_array_[i][2]), sensor_array_[i][0], color = 'b')
-        ax.add_patch(circles_sensors_[i])
-    for i in range(r1_num_sensors_, r2_num_sensors_):
-        circles_sensors_[i] = plt.Circle((sensor_array_[i][1], sensor_array_[i][2]), sensor_array_[i][0], color = 'r')
+    for i in range(0, total_num_sensors_):
+        if i < r1_num_sensors_:
+            circles_sensors_[i] = plt.Circle((sensor_array_[i][1], sensor_array_[i][2]), sensor_array_[i][0], color = 'r')
+        else:
+            circles_sensors_[i] = plt.Circle((sensor_array_[i][1], sensor_array_[i][2]), sensor_array_[i][0], color = 'b')
         ax.add_patch(circles_sensors_[i])
     ax.set_xlim(xmin = 0, xmax= shape_[0])
     ax.set_ylim(ymin = 0, ymax = shape_[1])

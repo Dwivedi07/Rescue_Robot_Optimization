@@ -2,7 +2,7 @@ import sum_gaussian
 import numpy as np
 
 class PSO: 
-
+    
     def __init__(self, shape, n_particles, terrain_map, num_iter): 
         self.shape = shape
         self.terrain_map = terrain_map
@@ -17,7 +17,7 @@ class PSO:
         self.best_personal = np.zeros((n_particles , 2))
         self.num_iter = num_iter
         self.vibration = 0.1
-        self.inertia = 0
+        self.inertia = 1
         self.social = 0
         self.cognition = 0
         self.count = 0
@@ -32,23 +32,32 @@ class PSO:
         for i in range(0, self.n_particles): 
             x = np.random.randint(0, self.shape[0] - 1)
             y = np.random.randint(0, self.shape[1] - 1)
-            self.current_locations[i][0] = x
-            self.current_locations[i][1] = y
+            self.current_locations[i][0] = int(x)
+            self.current_locations[i][1] = int(y)
+            #print(self.current_locations[i][0], self.current_locations[i][1])
             self.current_state[int(self.current_locations[i][0])][int(self.current_locations[i][1])] = 1
+            #print(self.current_state[int(self.current_locations[i][0])][int(self.current_locations[i][1])])
             self.best_personal[i][0] = x
             self.best_personal[i][1] = y
+            #print(self.best_personal[i])
             self.personal_optimal_values[i] = self.compute_objective_function(x,y)
+            #print(self.personal_optimal_values[i])
             if self.compute_objective_function(x,y) > self.optimal_value: 
                 self.optimal_value = self.compute_objective_function(x,y)
                 self.best_global[0] = x
                 self.best_global[1] = y
-            self.current_velocities[i][0] = np.random.randint(-int(self.shape[0]*self.vibration), int(self.shape[1]*self.vibration))
-            self.current_velocities[i][1] = np.random.randint(-int(self.shape[0]*self.vibration), int(self.shape[1]*self.vibration))
-    
+            #print(self.best_global)
+            self.current_velocities[i][0] = np.random.randint(int(-self.shape[0]*self.vibration), int(self.shape[1]*self.vibration))
+            self.current_velocities[i][1] = np.random.randint(int(-self.shape[0]*self.vibration), int(self.shape[1]*self.vibration))
+            #print(i, self.current_velocities[i])
+
     def velocity_update(self): 
         for i in range(0, self.n_particles):
-            self.current_velocities[i][0] = self.inertia * self.current_velocities[i][0] + self.cognition*(self.best_personal[i][0] - self.current_locations[i][0]) + self.social*(self.best_global[0] - self.current_locations[i][0])
-            self.current_velocities[i][1] = self.inertia * self.current_velocities[i][1] + self.cognition*(self.best_personal[i][1] - self.current_locations[i][1]) + self.social*(self.best_global[1] - self.current_locations[i][1])
+            r1 = np.random.uniform(0,1)
+            r2 = np.random.uniform(0,1)
+            self.current_velocities[i][0] = int(self.inertia * self.current_velocities[i][0] + r1*self.cognition*(self.best_personal[i][0] - self.current_locations[i][0]) + r2*self.social*(self.best_global[0] - self.current_locations[i][0]))
+            self.current_velocities[i][1] = int(self.inertia * self.current_velocities[i][1] + r1*self.cognition*(self.best_personal[i][1] - self.current_locations[i][1]) + r2*self.social*(self.best_global[1] - self.current_locations[i][1]))
+            #print(i, r1, r2, self.current_velocities[i])
 
     def location_update(self): 
         for i in range(0, self.n_particles):
@@ -80,10 +89,10 @@ class PSO:
         for i in range(0, self.shape[0]):
             for j in range(0, self.shape[1] ):
                 global_sum = global_sum + self.compute_objective_function(i,j)*self.current_state[i][j]
-        print("Number of iterations completed: ", self.count)
-        print("The value of the fitness function is: ", global_sum)
-        print("Location of first particle", self.current_locations)
-        print("Current state", self.current_state)
+        #print("Number of iterations completed: ", self.count)
+        #print("The value of the fitness function is: ", global_sum)
+        #print("Location of first particle", self.current_locations[0])
+        #print("Current state", self.current_state)
     
     def main_loop(self):
         self.initialize_particles()
