@@ -10,7 +10,7 @@ num_iter = 500
 iter_count_ = 0
 total_num_sensors_ = 40
 r1_num_sensors_ = 5
-n_samples_ = 100 
+n_samples_ = 1000
 r2_num_sensors_ = 35
 radius_1_ = 20
 radius_2_ = 5
@@ -18,7 +18,7 @@ sensor_array_ = np.zeros((total_num_sensors_, 3))
 population_ = 100
 selection_to_next_generation_ = 100 
 mutation_std_dev_ = shape_[0]/2
-mutation_rate_ = 1/total_num_sensors_ 
+mutation_rate_ = 5/total_num_sensors_ 
 #half the mutation rate as specified by the paper, since we are using a different 
 #mutation scheme 
 strings_population_ = np.zeros((population_, total_num_sensors_, 3))
@@ -144,14 +144,15 @@ def selection():
 def mutation():
     global population_, strings_population_, shape_
     global mutation_rate_, mutation_std_dev_, total_num_sensors_
+    sigma = 10
     for i in range(0, population_):
         for j in range(0, total_num_sensors_):
             a = np.random.uniform(0,1)
             if a < mutation_rate_:
-                strings_population_[i][j][1] = int(np.random.randint(0, shape_[0]-1 ))
+                strings_population_[i][j][1] = strings_population_[i][j][1] + int(np.random.normal(0, sigma)) # int(np.random.randint(0, shape_[0]-1 ))
             b = np.random.uniform(0,1)
             if b < mutation_rate_:
-                strings_population_[i][j][2] = int(np.random.randint(0, shape_[1]-1 ))
+                strings_population_[i][j][2] = strings_population_[i][j][2] + int(np.random.normal(0, sigma)) #int(np.random.randint(0, shape_[1]-1 ))
 
 #We are not using the crossover operator which the paper suggests (BLX-\alpha) operator
 #Instead we are using a more generic and weak crossover operator where we break the
