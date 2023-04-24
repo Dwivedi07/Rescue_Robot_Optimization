@@ -1,3 +1,4 @@
+#Main file
 import numpy as np
 import math
 import matplotlib.pyplot as plt
@@ -18,14 +19,13 @@ class Sampling():
         self.r = self.in_r()
         self.sample_pos()
         
-        
+   
     def in_r(self):
         r = np.zeros(self.srobots)
         for i in range(self.dis[0]):
             r[i]= self.radius[0]
         for j in range(self.dis[0], self.dis[0]+self.dis[1]):
             r[j]= self.radius[1]
-        
         return r
 
         

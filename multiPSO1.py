@@ -1,6 +1,4 @@
 #Implementation of PSO using 
-
-
 import sum_gaussian
 import numpy as np
 import matplotlib.pyplot as plt

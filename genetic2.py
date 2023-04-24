@@ -10,7 +10,7 @@ num_iter = 500
 iter_count_ = 0
 total_num_sensors_ = 40
 r1_num_sensors_ = 5
-n_samples_ = 1000
+n_samples_ = 100
 r2_num_sensors_ = 35
 radius_1_ = 20
 radius_2_ = 5
@@ -18,7 +18,7 @@ sensor_array_ = np.zeros((total_num_sensors_, 3))
 population_ = 100
 selection_to_next_generation_ = 100 
 mutation_std_dev_ = shape_[0]/2
-mutation_rate_ = 5/total_num_sensors_ 
+mutation_rate_ = 1/total_num_sensors_ 
 #half the mutation rate as specified by the paper, since we are using a different 
 #mutation scheme 
 strings_population_ = np.zeros((population_, total_num_sensors_, 3))
