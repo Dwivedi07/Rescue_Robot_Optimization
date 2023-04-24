@@ -4,16 +4,21 @@
 #The authors of this paper are Yourim Yoon and Yong-Hyuk Kim 
 import numpy as np 
 import time
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+import scipy.integrate as integrate
 
 shape_ = (100, 100)
-num_iter = 500
+num_iter = 2
 iter_count_ = 0
 total_num_sensors_ = 40
-r1_num_sensors_ = 5
-n_samples_ = 100
-r2_num_sensors_ = 35
-radius_1_ = 20
-radius_2_ = 5
+r1_num_sensors_ = 15
+n_samples_ = 200 
+fittest_member_ = 0
+r2_num_sensors_ = 25
+radius_1_ = 12
+radius_2_ = 8
+area_max_possible_ = np.pi*(r1_num_sensors_*radius_1_**2 + r2_num_sensors_*radius_2_**2)
 sensor_array_ = np.zeros((total_num_sensors_, 3))
 population_ = 100
 selection_to_next_generation_ = 100 
@@ -81,6 +86,7 @@ def monte_carlo(i):
         if (temp_cover): 
             count = count + 1
     estimated_fraction = count/n_samples_
+    efficiency = (count*area_max_possible_)/(n_samples_*area)
     estimated_area = estimated_fraction*area
     #print("The estimated area is:", estimated_area)
     return estimated_fraction
@@ -105,9 +111,8 @@ def monte_carlo_2(input_string, i):
 
 def selection(): 
     global population_, selection_to_next_generation_, strings_population_
-    global fitness_population_, store_average_fitness_, iter_count_
+    global fitness_population_, store_average_fitness_, iter_count_, fittest_member_
     temp_strings_population_ = np.zeros((population_, total_num_sensors_, 3))
-    iter_count_ = iter_count_ + 1
     count = 0
     func_fitness = np.zeros(population_)
     for i in range(0, population_): 
@@ -135,8 +140,14 @@ def selection():
         fitness_new_population[i] = monte_carlo(i)
         #print("Fitness of member", i, "in new population is:", fitness_new_population[i])
     store_average_fitness_[iter_count_] = np.sum(fitness_new_population)/selection_to_next_generation_
+    iter_count_ = iter_count_ + 1
     print("Average fitness of population in iteration", iter_count_, 'is', np.sum(fitness_new_population)/selection_to_next_generation_)
     print("Max fitness of population in iteration", iter_count_, 'is', np.max(fitness_new_population)  )
+    if (np.max(fitness_new_population) > 0.92):
+        fittest_member_ = np.argmax(fitness_new_population) 
+
+
+
 #We shall be using a different mutation operator than what is mentioned in the paper
 #What the paper does: Use Gaussian mutation
 #What we do: completely change the x-component or y-component for a sensor  
@@ -144,15 +155,14 @@ def selection():
 def mutation():
     global population_, strings_population_, shape_
     global mutation_rate_, mutation_std_dev_, total_num_sensors_
-    sigma = 10
     for i in range(0, population_):
         for j in range(0, total_num_sensors_):
             a = np.random.uniform(0,1)
             if a < mutation_rate_:
-                strings_population_[i][j][1] = strings_population_[i][j][1] + int(np.random.normal(0, sigma)) # int(np.random.randint(0, shape_[0]-1 ))
+                strings_population_[i][j][1] = int(np.random.randint(0, shape_[0]-1 ))
             b = np.random.uniform(0,1)
             if b < mutation_rate_:
-                strings_population_[i][j][2] = strings_population_[i][j][2] + int(np.random.normal(0, sigma)) #int(np.random.randint(0, shape_[1]-1 ))
+                strings_population_[i][j][2] = int(np.random.randint(0, shape_[1]-1 ))
 
 #We are not using the crossover operator which the paper suggests (BLX-\alpha) operator
 #Instead we are using a more generic and weak crossover operator where we break the
@@ -189,3 +199,50 @@ if __name__ == "__main__":
         mutation()
         end_time = time.time()
         print("Cumulative execution time till iteration", iter_count_," = ", end_time - start_time )
+
+    # #print("The radii of sensors are", sensor_array_[:] )
+    # circles_sensors_ = [0]*total_num_sensors_
+    # fig, ax = plt.subplots()
+
+    # for i in range(0, total_num_sensors_):
+    #     if i < r1_num_sensors_:
+    #         circles_sensors_[i] = plt.Circle((strings_population_[fittest_member_][i][1], strings_population_[fittest_member_][i][2]), strings_population_[fittest_member_][i][0], color = 'b')
+    #     else:
+    #         circles_sensors_[i] = plt.Circle((strings_population_[fittest_member_][i][1], strings_population_[fittest_member_][i][2]), strings_population_[fittest_member_][i][0], color = 'b')
+    #     ax.add_patch(circles_sensors_[i])
+    # ax.set_xlim(xmin = 0, xmax= shape_[0])
+    # ax.set_ylim(ymin = 0, ymax = shape_[1])
+
+    # fig.savefig('genetic_output.png')
+    # plt.show()
+
+    fig = plt.figure()
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    ax = fig.add_subplot(111, aspect='equal', autoscale_on=False,
+                        xlim=(0, shape_[0]), ylim=(0, shape_[1]))
+    particles, = ax.plot([], [], 'bo', ms=6)
+    rect = plt.Rectangle((0,0),shape_[0], shape_[1], ec='none', lw=2, fc='none')
+    ax.add_patch(rect)
+
+    def init_animation():
+        global strings_population_, rect
+        particles.set_data([], [])
+        particles.set_color("red")
+        rect.set_edgecolor('none')
+        return particles, rect
+    
+    def animate(i):
+        global count_, current_locations_, current_velocities_, terrain_map_
+        selection()
+        weak_crossover()
+        mutation()
+        count_ = count_ + 1
+        ms = int(fig.dpi * 2 * 0.2 * fig.get_figwidth()/ np.diff(ax.get_xbound())[0])
+        rect.set_edgecolor('k')
+        particles.set_data(current_locations_[:,1], current_locations_[:,0])
+        particles.set_markersize(ms)
+        return particles, rect
+    
+    ani = animation.FuncAnimation(fig, animate, frames=600,
+                              interval=100, blit=True, init_func=init_animation)
+    plt.show()
