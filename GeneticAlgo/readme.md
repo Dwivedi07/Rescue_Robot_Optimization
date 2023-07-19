@@ -1,0 +1,1 @@
+This is the file where we are storing the GA codes which are more or less well-made. Also adding all the files and the result images. The labels of the axes on the images can be used to see what the parameters were for the specific GA run. 
